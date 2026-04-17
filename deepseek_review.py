@@ -53,6 +53,28 @@ def call_llm(diff):
 
     return response.json()["choices"][0]["message"]["content"]
 
+def post_comment(review):
+    url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
+    }
+
+    body = {
+        "body": f"## 🤖 LLM Code Review\n\n{review[:5000]}"
+    }
+
+    print("POSTING TO:", url)
+
+    res = requests.post(url, headers=headers, json=body)
+
+    print("STATUS:", res.status_code)
+    print("RESPONSE:", res.text)
+
+    if res.status_code not in [200, 201]:
+        raise Exception(f"GitHub API error: {res.text}")
+
 def main():
     diff = get_git_diff()
 
@@ -64,6 +86,7 @@ def main():
 
     print("\n===== LLM REVIEW =====\n")
     print(review)
-
+    post_comment(review)
+    
 if __name__ == "__main__":
     main()
